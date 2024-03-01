@@ -20,26 +20,32 @@ module fifo #(parameter DEPTH = 63, WIDTH = 8) (
             wr_ptr           <= 0;
             rd_ptr           <= 0;
             data_out         <= 0;
-//          empty            <= 1;
-//          full             <= 1;
+            empty            <= 1;
+            full             <= 0;
         end
 
-        else if (wr_en && !full) begin                         // condition for filling the fifo 
-            data_mem[wr_ptr] <= data_in;
-            wr_ptr           <= wr_ptr + 1;
-        end
-
-        else if (rd_en && !empty && rd_ptr <= DEPTH-1) begin   // condition for taking data
-            data_out         <= data_mem[rd_ptr];
-            rd_ptr           <= rd_ptr + 1;
-        end
-        
-        if (rd_ptr == DEPTH) begin
-            data_out         <= rd_ptr;
+        else begin
+            if (wr_en && !full) begin                          // condition for filling the fifo 
+                data_mem[wr_ptr] <= data_in;
+                wr_ptr           <= wr_ptr + 1;
+                
+                if (wr_ptr == DEPTH - 1) begin
+                    full   <= 1;
+                end
+            end
+            
+            if (rd_en    && !empty) begin                       // condition for taking data
+                data_out <= data_mem[rd_ptr];
+                rd_ptr   <= rd_ptr + 1;
+                
+                if (rd_ptr == DEPTH - 1) begin
+                    empty  <= 1;
+                end
+            end
+            
+            else begin
+                empty <= 0;
+            end
         end
     end
-
-    assign full  = (wr_ptr == rd_ptr) && rd_en;
-    assign empty = (wr_ptr == rd_ptr) && wr_en;
-
 endmodule
